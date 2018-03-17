@@ -15,3 +15,4 @@ executable          countdown-to
                   , text
                   , wai-cors
                   , aeson
+                  , postgresql-simple
