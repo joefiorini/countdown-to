@@ -7,6 +7,7 @@
 {-# LANGUAGE RankNTypes #-}
 
 import System.Random
+import Data.Aeson hiding (Object)
 import Web.Scotty
 import Data.Text
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
@@ -23,7 +24,8 @@ import GraphQL
 import GraphQL.API
 import GraphQL.Resolver
 import GraphQL.Value.ToValue (ToValue(..))
-import Database.PostgreSQL.Simple
+import qualified Database.PostgreSQL.Simple as DB
+import Database.PostgreSQL.Simple hiding (query, Query)
 import Database.PostgreSQL.Simple.ToField
 import Database.PostgreSQL.Simple.FromRow
 import Database.PostgreSQL.Simple.ToRow
@@ -60,7 +62,7 @@ testCountdown = Countdown
 lookupCountdown :: Connection -> Text -> IO (Maybe Countdown)
 lookupCountdown connection short = do
   rows <-
-    query
+    DB.query
         connection
         "select short, description, starts_on, ends_on from timers where short = ?"
       $ Only short
@@ -88,7 +90,7 @@ viewCountdown countdown@Countdown {..} =
 parseUtcTime :: Text -> UTCTime
 parseUtcTime str = parseTimeOrError False
                                     defaultTimeLocale
-                                    (iso8601DateFormat $ Just "%H:%M:%S")
+                                    (iso8601DateFormat $ Just "%H:%M:%SZ")
                                     (unpack str)
 
 extractCountdown :: [Countdown] -> Countdown
@@ -109,7 +111,7 @@ createCountdownHandler
   -> Handler IO CountdownQuery
 createCountdownHandler conn description maybeShort startDate endDate = do
   actualShort <- getOrMakeShort maybeShort
-  rows        <- query conn q $ buildCountdown actualShort
+  rows        <- DB.query conn q $ buildCountdown actualShort
   viewCountdown $ extractCountdown (rows :: [Countdown])
  where
   buildCountdown short = Countdown
@@ -131,12 +133,26 @@ handler conn = pure $ (countdownHandler conn) :<> (createCountdownHandler conn)
 runQuery :: Connection -> Text -> IO Response
 runQuery conn = interpretAnonymousQuery @QueryRoot $ handler conn
 
+corsPolicy :: Maybe CorsResourcePolicy
+corsPolicy = Just CorsResourcePolicy
+  { corsOrigins        = Nothing
+  , corsMethods        = simpleMethods
+  , corsRequestHeaders = ["content-type"]
+  , corsExposedHeaders = Nothing
+  , corsMaxAge         = Nothing
+  , corsVaryOrigin     = False
+  , corsRequireOrigin  = False
+  , corsIgnoreFailures = False
+  }
+
+data QueryDoc = Query { query :: Text } deriving (Show, Generic)
+instance FromJSON QueryDoc
+
 main :: IO ()
 main = scotty 4000 $ do
-  middleware simpleCors
+  middleware $ cors $ const corsPolicy
   post "/graphql" $ do
     conn <- liftIO $ connectPostgreSQL "postgres://localhost/countdown-to_dev"
-    b <- body
-    response <- liftAndCatchIO $ runQuery conn $ toQuery b
-    json $ toValue response
-  where toQuery b = toStrict $ Lazy.decodeUtf8 b
+    b <- jsonData
+    response <- liftAndCatchIO $ runQuery conn $ query (b :: QueryDoc)
+    Web.Scotty.json $ toValue response

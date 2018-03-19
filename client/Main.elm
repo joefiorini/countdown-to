@@ -5,7 +5,13 @@ import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Attr exposing (..)
 import Html.Styled.Events exposing (onSubmit, onInput)
 import DateTimePicker
+import GraphQL.Client.Http as GraphQLClient
+import GraphQL.Request.Builder as GQL exposing (..)
+import GraphQL.Request.Builder.Arg as Arg
 import Date exposing (Date)
+import Date.Format exposing (formatISO8601)
+import Platform exposing (Task(..))
+import Task
 
 
 main : Program Never Model Msg
@@ -24,6 +30,7 @@ type Msg
     | ChangeDescription String
     | ChangeShort String
     | ChangeEndDate DateTimePicker.State (Maybe Date)
+    | ReceiveCountdownResponse (Result GraphQLClient.Error ResponseCountdown)
 
 
 type alias Countdown =
@@ -34,12 +41,75 @@ type alias Countdown =
     }
 
 
+type alias RequestCountdown =
+    { startDate : String
+    , endDate : String
+    , description : String
+    , short : Maybe String
+    }
+
+
+type alias ResponseCountdown =
+    { startDate : String
+    , endDate : String
+    , description : String
+    , short : String
+    }
+
+
 type alias Model =
     { template : Countdown
     , startDatePickerState : DateTimePicker.State
     , endDatePickerState : DateTimePicker.State
     , formErrors : Maybe FormErrors
     }
+
+
+createCountdownMutation : RequestCountdown -> Document Mutation ResponseCountdown vars
+createCountdownMutation countdown =
+    mutationDocument <|
+        extract
+            (field "createCountdown"
+                [ ( "description", Arg.string countdown.description )
+                , ( "short"
+                  , case countdown.short of
+                        Just short ->
+                            Arg.string short
+
+                        Nothing ->
+                            Arg.null
+                  )
+                , ( "startDate", Arg.string countdown.startDate )
+                , ( "endDate", Arg.string countdown.endDate )
+                ]
+                (GQL.object ResponseCountdown
+                    |> with (field "description" [] string)
+                    |> with (field "short" [] string)
+                    |> with (field "startDate" [] string)
+                    |> with (field "endDate" [] string)
+                )
+            )
+
+
+fromJust : Maybe a -> a
+fromJust m =
+    case m of
+        Just m ->
+            m
+
+        Nothing ->
+            Debug.crash "expected maybe to have a value!"
+
+
+sendCountdownRequest : Countdown -> Task GraphQLClient.Error ResponseCountdown
+sendCountdownRequest countdown =
+    RequestCountdown (formatISO8601 <| fromJust countdown.startDate)
+        (formatISO8601 <| fromJust countdown.endDate)
+        (fromJust countdown.description)
+        countdown.short
+        |> createCountdownMutation
+        |> request {}
+        |> GraphQLClient.sendMutation "http://localhost:4000/graphql"
 
 
 init : ( Model, Cmd Msg )
@@ -231,6 +301,14 @@ update msg model =
                     |> asFieldErrorsIn model
                 )
 
+        ReceiveCountdownResponse result ->
+            case result of
+                Ok response ->
+                    Debug.crash (toString response)
+
+                Err error ->
+                    Debug.crash ("FAILED" ++ toString error)
+
 
 allValid : FormErrors -> Bool
 allValid { startDate, endDate, description } =
@@ -258,7 +336,7 @@ updateWithValidator model =
         |> Maybe.withDefault False
         |> (\valid ->
                 if valid then
-                    model ! []
+                    model ! [ sendCountdownRequest model.template |> Task.attempt ReceiveCountdownResponse ]
                 else
                     model ! []
            )
@@ -287,7 +365,7 @@ view model =
             [ label [ for "description" ]
                 [ text "Description"
                 , input
-                    [ type_ "text", name "description", id "description", onInput ChangeDescription, Attr.required True ]
+                    [ type_ "text", name "description", Attr.id "description", onInput ChangeDescription, Attr.required True ]
                     []
                 ]
             , case model.formErrors of
@@ -303,13 +381,13 @@ view model =
                     text ""
             , label [ for "short" ]
                 [ text "Custom URL Shortcode"
-                , input [ type_ "text", name "short", id "short", onInput ChangeShort ] []
+                , input [ type_ "text", name "short", Attr.id "short", onInput ChangeShort ] []
                 ]
             , label [ for "starting-on" ]
                 [ text "Starting On"
                 , DateTimePicker.dateTimePicker
                     ChangeStartDate
-                    [ id "starting-on", name "starting-on", Attr.required True ]
+                    [ Attr.id "starting-on", name "starting-on", Attr.required True ]
                     model.startDatePickerState
                     model.template.startDate
                 ]
@@ -326,7 +404,7 @@ view model =
                     text ""
             , label [ for "ending-on" ]
                 [ text "Ending On"
-                , DateTimePicker.dateTimePicker ChangeEndDate [ id "ending-on", name "ending-on" ] model.endDatePickerState model.template.endDate
+                , DateTimePicker.dateTimePicker ChangeEndDate [ Attr.id "ending-on", name "ending-on" ] model.endDatePickerState model.template.endDate
                 ]
             , case model.formErrors of
                 Just { endDate } ->
