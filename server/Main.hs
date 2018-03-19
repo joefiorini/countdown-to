@@ -6,19 +6,19 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE RankNTypes #-}
 
+import System.Random
 import Web.Scotty
-
 import Data.Text
+import Data.Text.Encoding (encodeUtf8, decodeUtf8)
 import Data.Time
-
 import GHC.Generics
-
+import Control.Monad (replicateM)
 import Control.Monad.IO.Class (liftIO)
 import Network.Wai.Middleware.Cors
 import Data.Maybe (fromMaybe)
 import Data.Aeson (encode)
 import Data.Text.Lazy (toStrict)
-import Data.Text.Lazy.Encoding (decodeUtf8)
+import qualified Data.Text.Lazy.Encoding as Lazy
 import GraphQL
 import GraphQL.API
 import GraphQL.Resolver
@@ -27,6 +27,7 @@ import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.ToField
 import Database.PostgreSQL.Simple.FromRow
 import Database.PostgreSQL.Simple.ToRow
+import Web.Hashids
 
 data Countdown = Countdown { short :: Text, description :: Text, startDate :: UTCTime, endDate :: UTCTime } deriving (Show,Generic)
 
@@ -93,6 +94,12 @@ parseUtcTime str = parseTimeOrError False
 extractCountdown :: [Countdown] -> Countdown
 extractCountdown [countdown] = countdown
 
+makeShort :: Text -> IO Text
+makeShort salt = do
+  randomNums <- sequence $ replicateM 5 randomRIO (1, 9 :: Int)
+  return $ decodeUtf8 $ encodeListUsingSalt (encodeUtf8 salt) randomNums
+
+
 createCountdownHandler
   :: Connection
   -> Text
@@ -100,18 +107,19 @@ createCountdownHandler
   -> Text
   -> Text
   -> Handler IO CountdownQuery
-createCountdownHandler conn description short startDate endDate = do
-  rows <- query conn q buildCountdown
+createCountdownHandler conn description maybeShort startDate endDate = do
+  actualShort <- getOrMakeShort maybeShort
+  rows        <- query conn q $ buildCountdown actualShort
   viewCountdown $ extractCountdown (rows :: [Countdown])
  where
-  buildCountdown = Countdown
-    { short       = getOrMakeShort short
+  buildCountdown short = Countdown
+    { short       = short
     , description = description
     , startDate   = parseUtcTime startDate
     , endDate     = parseUtcTime endDate
     }
-  getOrMakeShort (Just short) = short
-  getOrMakeShort Nothing      = "blah"
+  getOrMakeShort (Just short) = pure short
+  getOrMakeShort Nothing      = makeShort description
   q
     = "insert into timers (short, description, starts_on, ends_on) values (?,?,?,?) returning short, description, starts_on, ends_on"
 
@@ -124,32 +132,11 @@ runQuery :: Connection -> Text -> IO Response
 runQuery conn = interpretAnonymousQuery @QueryRoot $ handler conn
 
 main :: IO ()
-main = scotty 3000 $ do
+main = scotty 4000 $ do
   middleware simpleCors
   post "/graphql" $ do
     conn <- liftIO $ connectPostgreSQL "postgres://localhost/countdown-to_dev"
     b <- body
     response <- liftAndCatchIO $ runQuery conn $ toQuery b
     json $ toValue response
-  where toQuery b = toStrict $ decodeUtf8 b
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  where toQuery b = toStrict $ Lazy.decodeUtf8 b

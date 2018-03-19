@@ -16,3 +16,5 @@ executable          countdown-to
                   , wai-cors
                   , aeson
                   , postgresql-simple
+                  , hashids
+                  , random
