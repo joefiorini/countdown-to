@@ -1,7 +1,15 @@
 -- Table: public.timers
 
 -- DROP TABLE public.timers;
+CREATE SEQUENCE public.timers_id_seq
+    INCREMENT 1
+    START 2
+    MINVALUE 1
+    MAXVALUE 2147483647
+    CACHE 1;
 
+ALTER SEQUENCE public.timers_id_seq
+    OWNER TO joe;
 CREATE TABLE public.timers
 (
     id integer NOT NULL DEFAULT nextval('timers_id_seq'::regclass),
