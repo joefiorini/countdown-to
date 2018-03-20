@@ -11,14 +11,16 @@ import GraphQL.Request.Builder.Arg as Arg
 import Date exposing (Date)
 import Date.Format exposing (formatISO8601)
 import Platform exposing (Task(..))
+import Navigation
+import UrlParser
 import Task
 
 
 main : Program Never Model Msg
 main =
-    Html.program
+    Navigation.program UrlChange
         { init = init
-        , view = view
+        , view = view >> toUnstyled
         , update = update
         , subscriptions = subscriptions
         }
@@ -31,6 +33,14 @@ type Msg
     | ChangeShort String
     | ChangeEndDate DateTimePicker.State (Maybe Date)
     | ReceiveCountdownResponse (Result GraphQLClient.Error ResponseCountdown)
+    | UrlChange Navigation.Location
+    | GraphQLRemoteUpdate (GraphQLRemote ResponseCountdown)
+
+
+type Route
+    = Form
+    | ShowCountdown String
+    | NoRoute
 
 
 type alias Countdown =
@@ -39,6 +49,14 @@ type alias Countdown =
     , description : Maybe String
     , short : Maybe String
     }
+
+
+type GraphQLRemote a
+    = NotAsked
+    | Loading
+    | Success a
+    | NoData
+    | Failure GraphQLClient.Error
 
 
 type alias RequestCountdown =
@@ -62,7 +80,29 @@ type alias Model =
     , startDatePickerState : DateTimePicker.State
     , endDatePickerState : DateTimePicker.State
     , formErrors : Maybe FormErrors
+    , currentRoute : Route
+    , currentCountdown : GraphQLRemote ResponseCountdown
     }
+
+
+countdownQuery : String -> Document Query (Maybe ResponseCountdown) vars
+countdownQuery short =
+    queryDocument <|
+        extract
+            (field "countdown"
+                [ ( "short", Arg.string short ) ]
+                (nullable responseCountdownObject)
+            )
+
+
+responseCountdownObject : ValueSpec NonNull ObjectType ResponseCountdown vars
+responseCountdownObject =
+    (GQL.object ResponseCountdown
+        |> with (field "startDate" [] string)
+        |> with (field "endDate" [] string)
+        |> with (field "description" [] string)
+        |> with (field "short" [] string)
+    )
 
 
 createCountdownMutation : RequestCountdown -> Document Mutation ResponseCountdown vars
@@ -82,12 +122,7 @@ createCountdownMutation countdown =
                 , ( "startDate", Arg.string countdown.startDate )
                 , ( "endDate", Arg.string countdown.endDate )
                 ]
-                (GQL.object ResponseCountdown
-                    |> with (field "description" [] string)
-                    |> with (field "short" [] string)
-                    |> with (field "startDate" [] string)
-                    |> with (field "endDate" [] string)
-                )
+                responseCountdownObject
             )
 
 
@@ -101,6 +136,13 @@ fromJust m =
             Debug.crash "expected maybe to have a value!"
 
 
+sendCountdownQuery : String -> Task GraphQLClient.Error (Maybe ResponseCountdown)
+sendCountdownQuery short =
+    countdownQuery short
+        |> request {}
+        |> GraphQLClient.sendQuery "http://localhost:4000/graphql"
+
+
 sendCountdownRequest : Countdown -> Task GraphQLClient.Error ResponseCountdown
 sendCountdownRequest countdown =
     RequestCountdown (formatISO8601 <| fromJust countdown.startDate)
@@ -112,21 +154,53 @@ sendCountdownRequest countdown =
         |> GraphQLClient.sendMutation "http://localhost:4000/graphql"
 
 
-init : ( Model, Cmd Msg )
-init =
-    { template =
-        { startDate = Nothing
-        , endDate = Nothing
-        , description = Nothing
-        , short = Nothing
+parseGraphQLRemoteResult : Result GraphQLClient.Error (Maybe ResponseCountdown) -> GraphQLRemote ResponseCountdown
+parseGraphQLRemoteResult result =
+    case result of
+        Ok (Just value) ->
+            Success value
+
+        Ok Nothing ->
+            NoData
+
+        Err error ->
+            Failure error
+
+
+init : Navigation.Location -> ( Model, Cmd Msg )
+init location =
+    let
+        currentRoute =
+            parseRoute location
+    in
+        { template =
+            { startDate = Nothing
+            , endDate = Nothing
+            , description = Nothing
+            , short = Nothing
+            }
+        , startDatePickerState = DateTimePicker.initialState
+        , endDatePickerState = DateTimePicker.initialState
+        , formErrors = Nothing
+        , currentRoute = currentRoute
+        , currentCountdown = NotAsked
         }
-    , startDatePickerState = DateTimePicker.initialState
-    , endDatePickerState = DateTimePicker.initialState
-    , formErrors = Nothing
-    }
-        ! [ DateTimePicker.initialCmd ChangeStartDate DateTimePicker.initialState
-          , DateTimePicker.initialCmd ChangeEndDate DateTimePicker.initialState
-          ]
+            ! [ DateTimePicker.initialCmd ChangeStartDate DateTimePicker.initialState
+              , DateTimePicker.initialCmd ChangeEndDate DateTimePicker.initialState
+              , (case currentRoute of
+                    ShowCountdown short ->
+                        Cmd.batch [ sendCountdownQuery short |> Task.attempt (parseGraphQLRemoteResult >> GraphQLRemoteUpdate), setLoadingState ]
+
+                    _ ->
+                        Cmd.none
+                )
+              ]
+
+
+setLoadingState : Cmd Msg
+setLoadingState =
+    Task.succeed Loading
+        |> Task.perform GraphQLRemoteUpdate
 
 
 setStartDatePickerState : DateTimePicker.State -> Model -> Model
@@ -167,12 +241,6 @@ type FormError
 initValidator : Countdown -> Validator
 initValidator countdown =
     Validator countdown { startDate = NotChecked, endDate = NotChecked, description = NotChecked }
-
-
-
--- fromTemplateIn : Model -> Countdown -> Model
--- fromTemplateIn model =
---     model.template
 
 
 checkStartDate : Validator -> Validator
@@ -309,6 +377,26 @@ update msg model =
                 Err error ->
                     Debug.crash ("FAILED" ++ toString error)
 
+        UrlChange location ->
+            { model | currentRoute = parseRoute location } ! []
+
+        GraphQLRemoteUpdate remote ->
+            { model | currentCountdown = remote } ! []
+
+
+parseRoute : Navigation.Location -> Route
+parseRoute location =
+    UrlParser.parsePath route location
+        |> Maybe.withDefault NoRoute
+
+
+route : UrlParser.Parser (Route -> a) a
+route =
+    UrlParser.oneOf
+        [ UrlParser.map Form UrlParser.top
+        , UrlParser.map ShowCountdown UrlParser.string
+        ]
+
 
 allValid : FormErrors -> Bool
 allValid { startDate, endDate, description } =
@@ -359,6 +447,19 @@ input =
 
 view : Model -> Html Msg
 view model =
+    case model.currentRoute of
+        Form ->
+            formView model
+
+        ShowCountdown _ ->
+            showView model
+
+        NoRoute ->
+            notFound
+
+
+formView : Model -> Html Msg
+formView model =
     main_ []
         [ h1 [] [ text "Countdown!!!" ]
         , Html.form [ onSubmit RequestCreateCountdown ]
@@ -421,3 +522,29 @@ view model =
                 [ text "Start Countdown!" ]
             ]
         ]
+
+
+showView : Model -> Html Msg
+showView model =
+    main_ []
+        [ case model.currentCountdown of
+            NotAsked ->
+                text "Not Asked"
+
+            Loading ->
+                text "Loading"
+
+            Success countdown ->
+                text countdown.description
+
+            NoData ->
+                text "Countdown not found"
+
+            Failure error ->
+                text (toString error)
+        ]
+
+
+notFound : Html Msg
+notFound =
+    text "404 Not Found"
