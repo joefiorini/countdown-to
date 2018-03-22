@@ -93,4 +93,4 @@ let schema =
     ])
   );
 
-let () = Server.start(~ctx=() => (), schema) |> Lwt_main.run;
+let () = Server.start(~port=4000, ~ctx=() => (), schema) |> Lwt_main.run;
