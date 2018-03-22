@@ -1,94 +1,72 @@
 open Lwt;
 
-open Lwt;
-
 module C = Cohttp_lwt_unix;
 
 open Graphql_lwt;
+open ISO8601.Permissive;
 
 type role =
   | User
   | Admin;
 
-type user = {
-  id: int,
-  name: string,
-  role,
-  friends: list(user)
+type countdown = {
+  short: string,
+  description: string,
+  startDate: float,
+  endDate: float
 };
 
-let rec alice = {id: 1, name: "Alice", role: Admin, friends: [bob]}
-and bob = {id: 2, name: "Bob", role: User, friends: [alice]};
-
-let users = [alice, bob];
-
-let role =
+let countdown =
   Schema.(
-    enum(
-      "role",
-      ~values=[
-        enum_value("USER", ~value=User, ~doc="A regular user"),
-        enum_value("ADMIN", ~value=Admin, ~doc="An admin user")
-      ]
-    )
-  );
-
-let user =
-  Schema.(
-    obj("user", ~fields=user =>
+    obj("countdown", ~fields=(_) =>
       [
-        field("id", ~args=Arg.([]), ~typ=non_null(int), ~resolve=((), p) =>
-          p.id
-        ),
-        field("name", ~args=Arg.([]), ~typ=non_null(string), ~resolve=((), p) =>
-          p.name
-        ),
-        field("role", ~args=Arg.([]), ~typ=non_null(role), ~resolve=((), p) =>
-          p.role
+        field("short", ~args=Arg.([]), ~typ=non_null(string), ~resolve=((), p) =>
+          p.short
         ),
         field(
-          "friends",
+          "description",
           ~args=Arg.([]),
-          ~typ=list(non_null(user)),
+          ~typ=non_null(string),
           ~resolve=((), p) =>
-          Some(p.friends)
+          p.description
+        ),
+        field(
+          "startDate", ~args=Arg.([]), ~typ=non_null(string), ~resolve=((), p) =>
+          string_of_datetime(p.startDate)
+        ),
+        field(
+          "endDate",
+          ~args=Arg.([]),
+          ~typ=non_null(string),
+          ~resolve=((), p) =>
+          string_of_datetime(p.endDate)
         )
       ]
     )
   );
-
+let testCountdown =
+  { short: "blah", description: "Diddy doo dah", startDate: datetime("2018-03-24T12:00:00Z"), endDate: datetime("2018-03-30T12:00:00Z")};
 let schema =
   Schema.(
     schema([
       io_field(
-        "users",
-        ~args=Arg.([]),
-        ~typ=non_null(list(non_null(user))),
-        ~resolve=((), ()) =>
-        Lwt.return(users)
+        "countdown",
+        ~args=Arg.[arg("short", ~typ=non_null(string))],
+        ~typ=countdown,
+        ~resolve=((), (), short) =>
+        Lwt.return(Some(testCountdown))
       ),
-      field(
-        "greeter",
-        ~typ=string,
-        ~args=
-          Arg.[
-            arg(
-              "config",
-              ~typ=
-                non_null(
-                  obj(
-                    "greeter_config",
-                    ~coerce=(greeting, name) => (greeting, name),
-                    ~fields=[
-                      arg'("greeting", ~typ=string, ~default="hello"),
-                      arg("name", ~typ=non_null(string))
-                    ]
-                  )
-                )
-            )
-          ],
-        ~resolve=((), (), (greeting, name)) =>
-        Some(Format.sprintf("%s, %s", greeting, name))
+    ],
+    ~mutations=[
+      field("createCountdown",
+        ~typ=non_null(countdown),
+        ~args=Arg.[
+          arg("short", ~typ=string),
+          arg("description", ~typ=non_null( string)),
+          arg("startDate", ~typ=non_null( string)),
+          arg("endDate", ~typ=non_null( string)),
+        ],
+        ~resolve=(_, _, _, _, _, _ ) => testCountdown
       )
     ])
   );

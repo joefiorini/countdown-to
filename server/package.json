@@ -3,16 +3,8 @@
   "license": "private",
   "version": "0.0.1",
   "esy": {
-    "build": [
-      [
-        "refmterr",
-        "jbuilder",
-        "build"
-      ]
-    ],
-    "install": [
-      "esy-installer"
-    ],
+    "build": [["refmterr", "jbuilder", "build"]],
+    "install": ["esy-installer"],
     "buildsInSource": "_build"
   },
   "devDependencies": {
@@ -28,6 +20,7 @@
   },
   "dependencies": {
     "@esy-ocaml/esy-installer": "^0.0.0",
+    "@opam/ISO8601": "^0.2.5",
     "@opam/cohttp": "^1.0.2",
     "@opam/cohttp-lwt": "^1.0.2",
     "@opam/cohttp-lwt-unix": "^1.0.2",
