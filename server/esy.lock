@@ -139,6 +139,17 @@
   peerDependencies:
     ocaml " >= 4.2.3000"
 
+"@opam/calendar@*":
+  version "2.3.2"
+  uid e5b72f7cb01d93b46201879981ec8559
+  resolved "@opam/calendar@2.3.2-e5b72f7cb01d93b46201879981ec8559.tgz"
+  dependencies:
+    "@esy-ocaml/esy-installer" "^0.0.0"
+    "@esy-ocaml/substs" "^0.0.1"
+    "@opam/ocamlfind" "*"
+  peerDependencies:
+    ocaml "*"
+
 "@opam/camlp4@*":
   version "4.6.0-1"
   uid ec9e71b1e73d101ab8ef9a66cc9035e7
@@ -163,6 +174,35 @@
     "@opam/jbuilder" " >= 1.0.0-beta7"
   peerDependencies:
     ocaml " >= 4.2.3000"
+
+"@opam/caqti-lwt@^0.10.1":
+  version "0.10.1"
+  uid b795bfef7dd742d3cbe417caea6e5007
+  resolved "@opam/caqti-lwt@0.10.1-b795bfef7dd742d3cbe417caea6e5007.tgz"
+  dependencies:
+    "@esy-ocaml/esy-installer" "^0.0.0"
+    "@esy-ocaml/substs" "^0.0.1"
+    "@opam/caqti" "=0.10.1"
+    "@opam/jbuilder" "*"
+    "@opam/lwt" "*"
+  peerDependencies:
+    ocaml "*"
+
+"@opam/caqti@=0.10.1":
+  version "0.10.1"
+  uid f46ad99f428d20fe84b1a04ade306508
+  resolved "@opam/caqti@0.10.1-f46ad99f428d20fe84b1a04ade306508.tgz"
+  dependencies:
+    "@esy-ocaml/esy-installer" "^0.0.0"
+    "@esy-ocaml/substs" "^0.0.1"
+    "@opam/calendar" "*"
+    "@opam/jbuilder" "*"
+    "@opam/ocamlfind" "*"
+    "@opam/ppx_optcomp" "*"
+    "@opam/ptime" "*"
+    "@opam/uri" " >= 1.9.0"
+  peerDependencies:
+    ocaml " >= 4.4.0"
 
 "@opam/cmdliner@*":
   version "1.0.2"
@@ -687,7 +727,7 @@
   peerDependencies:
     ocaml " >= 4.4.1000"
 
-"@opam/ppx_optcomp@ >= 100000000.10.0  < 100000000.11.0":
+"@opam/ppx_optcomp@ >= 100000000.10.0  < 100000000.11.0", "@opam/ppx_optcomp@*", "@opam/ppx_optcomp@100000000.10.0":
   version "100000000.10.0"
   uid "053c049836f5eb4d7fb6ace06c7e890e"
   resolved "@opam/ppx_optcomp@100000000.10.0-053c049836f5eb4d7fb6ace06c7e890e.tgz"
@@ -754,6 +794,20 @@
     "@opam/ppx_metaquot" " >= 100000000.10.0  < 100000000.11.0"
   peerDependencies:
     ocaml " >= 4.4.1000"
+
+"@opam/ptime@*":
+  version "0.8.3"
+  uid "0d9847e88a9d9d2c04ec1c882639b8ff"
+  resolved "@opam/ptime@0.8.3-0d9847e88a9d9d2c04ec1c882639b8ff.tgz"
+  dependencies:
+    "@esy-ocaml/esy-installer" "^0.0.0"
+    "@esy-ocaml/substs" "^0.0.1"
+    "@opam/ocamlbuild" "*"
+    "@opam/ocamlfind" "*"
+    "@opam/result" "*"
+    "@opam/topkg" "*"
+  peerDependencies:
+    ocaml " >= 4.1.0"
 
 "@opam/re@*":
   version "1.7.3"
