@@ -1,0 +1,43 @@
+{
+  "name": "countdown-to-server",
+  "license": "private",
+  "version": "0.0.1",
+  "esy": {
+    "build": [
+      [
+        "refmterr",
+        "jbuilder",
+        "build"
+      ]
+    ],
+    "install": [
+      "esy-installer"
+    ],
+    "buildsInSource": "_build"
+  },
+  "devDependencies": {
+    "ocaml": "^4.6.1"
+  },
+  "resolutions": {
+    "**/@opam/base": "100000000.10.0",
+    "**/@opam/sexplib": "100000000.10.0",
+    "**/@opam/stdio": "100000000.10.0",
+    "**/@opam/ppx_core": "100000000.10.0",
+    "**/@opam/ppx_driver": "100000000.10.3",
+    "**/@opam/result": "1.2.0"
+  },
+  "dependencies": {
+    "@esy-ocaml/esy-installer": "^0.0.0",
+    "@opam/cohttp": "^1.0.2",
+    "@opam/cohttp-lwt": "^1.0.2",
+    "@opam/cohttp-lwt-unix": "^1.0.2",
+    "@opam/graphql-lwt": "link:../../ocaml-graphql-server",
+    "@opam/jbuilder": "^1.0.0-beta191",
+    "@opam/reason": "^3.0.4",
+    "@opam/sexplib": "^100000000.11.0",
+    "refmterr": "^3.0.7"
+  },
+  "peerDependencies": {
+    "ocaml": "^4.6.1"
+  }
+}

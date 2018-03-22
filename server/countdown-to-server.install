@@ -1,0 +1,7 @@
+lib: [
+  "_build/install/default/lib/countdown-to-server/META" {"META"}
+  "_build/install/default/lib/countdown-to-server/opam" {"opam"}
+]
+bin: [
+  "_build/install/default/bin/Server" {"Server"}
+]
