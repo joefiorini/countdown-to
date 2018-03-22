@@ -4,4 +4,4 @@
  ((name Server)
   (public_name Server)
   (package countdown-to-server)
-  (libraries (cohttp cohttp-lwt cohttp-lwt-unix))))
+  (libraries (graphql-lwt cohttp-lwt-unix))))
