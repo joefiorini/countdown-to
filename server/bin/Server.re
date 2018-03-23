@@ -81,6 +81,7 @@ let (>>=?) = (m, f) =>
     | Error(err) => Lwt.return(Error(err))
   );
 
+let db = Caqti_lwt.connect(Uri.of_string("postgres://localhost/countdown-to_dev"));
 let testCountdown: Countdown.t =
   { short: "blah", description: "Diddy doo dah", startDate: datetime("2018-03-24T12:00:00Z"), endDate: datetime("2018-03-30T12:00:00Z")};
 let schema =
@@ -90,10 +91,10 @@ let schema =
         "countdown",
         ~args=Arg.[arg("short", ~typ=non_null(string))],
         ~typ=countdown,
-        ~resolve=((), db, short) =>
-        lookup_timer(short, db) >>= (fun
-          | Ok(timer_opt) => Lwt.return(timer_opt)
-          | Error(err) => Lwt.return(None)
+        ~resolve=((), (), short) =>
+        db >>=? lookup_timer(short) >|= (fun
+          | Ok(timer_opt) => timer_opt
+          | Error(err) => None
           )
       ),
     ],
@@ -111,5 +112,4 @@ let schema =
     ])
   );
 
-let db = Caqti_lwt.connect("postgres://localhost/countdown-to_dev");
-let () = Server.start(~port=4000, ~ctx=() => db, schema) |> Lwt_main.run;
+let () = Server.start(~port=4000, ~ctx=() => (), schema) |> Lwt_main.run;
