@@ -4,4 +4,4 @@
  ((name Server)
   (public_name Server)
   (package countdown-to-server)
-  (libraries (graphql-lwt cohttp-lwt-unix ISO8601 caqti caqti-lwt))))
+  (libraries (graphql-lwt cohttp-lwt-unix ISO8601 caqti caqti-lwt caqti-driver-postgresql))))

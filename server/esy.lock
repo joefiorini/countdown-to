@@ -114,7 +114,7 @@
   peerDependencies:
     ocaml "*"
 
-"@opam/base@ >= 100000000.10.0  < 100000000.11.0", "@opam/base@100000000.10.0":
+"@opam/base@ >= 100000000.10.0  < 100000000.11.0", "@opam/base@*", "@opam/base@100000000.10.0":
   version "100000000.10.0"
   uid "61a1898496c450e7f69b8cc9372c37d3"
   resolved "@opam/base@100000000.10.0-61a1898496c450e7f69b8cc9372c37d3.tgz"
@@ -174,6 +174,19 @@
     "@opam/jbuilder" " >= 1.0.0-beta7"
   peerDependencies:
     ocaml " >= 4.2.3000"
+
+"@opam/caqti-driver-postgresql@^0.10.1":
+  version "0.10.1"
+  uid afa627e8621fb7d85e0968e9279c13f2
+  resolved "@opam/caqti-driver-postgresql@0.10.1-afa627e8621fb7d85e0968e9279c13f2.tgz"
+  dependencies:
+    "@esy-ocaml/esy-installer" "^0.0.0"
+    "@esy-ocaml/substs" "^0.0.1"
+    "@opam/caqti" "=0.10.1"
+    "@opam/jbuilder" "*"
+    "@opam/postgresql" "*"
+  peerDependencies:
+    ocaml "*"
 
 "@opam/caqti-lwt@^0.10.1":
   version "0.10.1"
@@ -341,6 +354,19 @@
     "@esy-ocaml/substs" "^0.0.1"
   peerDependencies:
     ocaml "*"
+
+"@opam/configurator@*", "@opam/configurator@100000000.10.0":
+  version "100000000.10.0"
+  uid "54a229df95e0b070ebf69bd4c35166e6"
+  resolved "@opam/configurator@100000000.10.0-54a229df95e0b070ebf69bd4c35166e6.tgz"
+  dependencies:
+    "@esy-ocaml/esy-installer" "^0.0.0"
+    "@esy-ocaml/substs" "^0.0.1"
+    "@opam/base" " >= 100000000.10.0  < 100000000.11.0"
+    "@opam/jbuilder" " >= 1.0.0-beta12"
+    "@opam/stdio" " >= 100000000.10.0  < 100000000.11.0"
+  peerDependencies:
+    ocaml " >= 4.4.1000"
 
 "@opam/cppo@ >= 1.1.0", "@opam/cppo@ >= 1.1.2", "@opam/cppo@*":
   version "1.6.4"
@@ -575,7 +601,7 @@
 
 "@opam/num@*":
   version "1.1.0"
-  uid c64f9fc6e953860619021ca270ab9d57
+  uid "269a29bf7bb263dc53b882ff32902fa3"
   resolved "@opam/num@1.1.0-c64f9fc6e953860619021ca270ab9d57.tgz"
   dependencies:
     "@esy-ocaml/esy-installer" "^0.0.0"
@@ -620,7 +646,7 @@
 
 "@opam/ocamlfind@", "@opam/ocamlfind@ >= 1.5.0", "@opam/ocamlfind@ >= 1.5.3", "@opam/ocamlfind@ >= 1.6.1", "@opam/ocamlfind@ >= 1.7.2", "@opam/ocamlfind@ >= 1.7.3", "@opam/ocamlfind@ >= 1.7.3--1", "@opam/ocamlfind@*":
   version "1.7.3--1"
-  uid "2e5446e160cfd1aae7944b2f7add39b7"
+  uid "8bdb2749715bb44e0e6d09503deb7fd7"
   resolved "@opam/ocamlfind@1.7.3--1-2e5446e160cfd1aae7944b2f7add39b7.tgz"
   dependencies:
     "@esy-ocaml/esy-installer" "^0.0.0"
@@ -640,6 +666,21 @@
     "@opam/sexplib0" " >= 100000000.11.0  < 100000000.12.0"
   peerDependencies:
     ocaml " >= 4.4.1000"
+
+"@opam/postgresql@*":
+  version "4.3.0"
+  uid "90c69f7e374e0d0119fec9b3153db062"
+  resolved "@opam/postgresql@4.3.0-90c69f7e374e0d0119fec9b3153db062.tgz"
+  dependencies:
+    "@esy-ocaml/esy-installer" "^0.0.0"
+    "@esy-ocaml/substs" "^0.0.1"
+    "@opam/base" "*"
+    "@opam/base-bytes" "*"
+    "@opam/configurator" "*"
+    "@opam/jbuilder" " >= 1.0.0-beta10"
+    "@opam/stdio" "*"
+  peerDependencies:
+    ocaml " >= 4.4.0"
 
 "@opam/ppx_ast@ >= 100000000.10.0  < 100000000.11.0":
   version "100000000.10.0"
@@ -911,7 +952,7 @@
   peerDependencies:
     ocaml " >= 4.4.1000"
 
-"@opam/stdio@ >= 100000000.10.0  < 100000000.11.0", "@opam/stdio@100000000.10.0":
+"@opam/stdio@ >= 100000000.10.0  < 100000000.11.0", "@opam/stdio@*", "@opam/stdio@100000000.10.0":
   version "100000000.10.0"
   uid "1d609fa241244c86cd7029e29ee910b3"
   resolved "@opam/stdio@100000000.10.0-1d609fa241244c86cd7029e29ee910b3.tgz"

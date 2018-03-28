@@ -17,11 +17,13 @@
     "**/@opam/ppx_optcomp": "100000000.10.0",
     "**/@opam/ppx_core": "100000000.10.0",
     "**/@opam/ppx_driver": "100000000.10.3",
+    "@opam/configurator": "100000000.10.0",
     "**/@opam/result": "1.2.0"
   },
   "dependencies": {
     "@esy-ocaml/esy-installer": "^0.0.0",
     "@opam/ISO8601": "^0.2.5",
+    "@opam/caqti-driver-postgresql": "^0.10.1",
     "@opam/caqti-lwt": "^0.10.1",
     "@opam/cohttp": "^1.0.2",
     "@opam/cohttp-lwt": "^1.0.2",
