@@ -1,6 +1,19 @@
 lib: [
   "_build/install/default/lib/countdown-to-server/META" {"META"}
   "_build/install/default/lib/countdown-to-server/opam" {"opam"}
+  "_build/install/default/lib/countdown-to-server/lib.cmi" {"lib.cmi"}
+  "_build/install/default/lib/countdown-to-server/lib.cmx" {"lib.cmx"}
+  "_build/install/default/lib/countdown-to-server/lib.cmt" {"lib.cmt"}
+  "_build/install/default/lib/countdown-to-server/lib.ml-gen" {"lib.ml-gen"}
+  "_build/install/default/lib/countdown-to-server/lib__RandomWord.cmi" {"lib__RandomWord.cmi"}
+  "_build/install/default/lib/countdown-to-server/lib__RandomWord.cmx" {"lib__RandomWord.cmx"}
+  "_build/install/default/lib/countdown-to-server/lib__RandomWord.cmt" {"lib__RandomWord.cmt"}
+  "_build/install/default/lib/countdown-to-server/RandomWord.re" {"RandomWord.re"}
+  "_build/install/default/lib/countdown-to-server/lib.cma" {"lib.cma"}
+  "_build/install/default/lib/countdown-to-server/lib.cmxa" {"lib.cmxa"}
+  "_build/install/default/lib/countdown-to-server/lib.a" {"lib.a"}
+  "_build/install/default/lib/countdown-to-server/lib.cmxs" {"lib.cmxs"}
+  "_build/install/default/lib/countdown-to-server/countdown-to-server.dune" {"countdown-to-server.dune"}
 ]
 bin: [
   "_build/install/default/bin/Server" {"Server"}
